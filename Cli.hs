@@ -68,23 +68,23 @@ editStore (EditOptions _) = print "hello"
 generate (GenerateOptions _ _ _ _ _) = print "hello"
 rm (RmOptions _ _ _) = print "hello"
 
-initDesc  = ( fullDesc
-              <> progDesc ""
-              <> header "")
-
+initDesc = progDesc "Initialize new password storage and use gpg-id for encryption"
+lsDesc = progDesc "List passwords"
+showDesc = progDesc "Show existing password and optionally put it on the clipboard."
+insertDesc = progDesc "Insert new password"
+editDesc = progDesc "Insert a new password or edit an existing password using $EDITOR"
+generateDesc = progDesc "Generate a new password of pass-length"
+rmDesc = progDesc "Remove existing password or directory"
 
 superParser = subparser
               (command "init" (initStore <$> info (helper <*> initParser) initDesc)
-               <> command "ls" (lsStore <$> info lsParser idm)
-               <> command "show" (showStore <$> info showParser idm)
-               <> command "insert" (insertStore <$> info insertParser idm)
-               <> command "edit" (editStore <$> info editParser idm)
-               <> command "generate" (generate <$> info generateParser idm)
-               <> command "rm" (rm <$> info rmParser idm))
+               <> command "ls" (lsStore <$> info lsParser lsDesc)
+               <> command "show" (showStore <$> info showParser showDesc)
+               <> command "insert" (insertStore <$> info insertParser insertDesc)
+               <> command "edit" (editStore <$> info editParser editDesc)
+               <> command "generate" (generate <$> info generateParser generateDesc)
+               <> command "rm" (rm <$> info rmParser rmDesc))
 
 main :: IO ()
 main = join $ execParser opts
-    where opts = info (helper <*> superParser)
-                 ( fullDesc
-                   <> progDesc ""
-                   <> header "")
+    where opts = info (helper <*> superParser) idm
