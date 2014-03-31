@@ -3,11 +3,11 @@ import Options.Applicative
 import Teensy
 
 -- TODO: move into Options type
-initDesc = progDesc "Initialize new password storage and use gpg-id for encryption"
+initDesc = progDesc "Init new pass storage using gpg"
 lsDesc = progDesc "List passwords"
-showDesc = progDesc "Show existing password and optionally put it on the clipboard."
+showDesc = progDesc "Show existing password."
 insertDesc = progDesc "Insert new password"
-editDesc = progDesc "Insert a new password or edit an existing password using $EDITOR"
+editDesc = progDesc "edit an entry using $EDITOR"
 generateDesc = progDesc "Generate a new password of pass-length"
 rmDesc = progDesc "Remove existing password or directory"
 

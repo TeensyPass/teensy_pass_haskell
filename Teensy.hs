@@ -12,6 +12,10 @@ module Teensy
 
 type PassName = String
 
+gpg_opts = ["--quiet", "--yes", "--batch"]
+
+clip = undefined
+
 {-| 
    Initialize new password storage and use gpg-id for encryption.
    Optionally reencrypt existing passwords using new gpg-id.
