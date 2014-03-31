@@ -1,7 +1,15 @@
 import Control.Monad
 import Options.Applicative
+import Teensy
 
-type PassName = String
+-- TODO: move into Options type
+initDesc = progDesc "Initialize new password storage and use gpg-id for encryption"
+lsDesc = progDesc "List passwords"
+showDesc = progDesc "Show existing password and optionally put it on the clipboard."
+insertDesc = progDesc "Insert new password"
+editDesc = progDesc "Insert a new password or edit an existing password using $EDITOR"
+generateDesc = progDesc "Generate a new password of pass-length"
+rmDesc = progDesc "Remove existing password or directory"
 
 data Options = InitOptions { gpgID :: String
                            , reencrypt :: Bool}
@@ -19,19 +27,19 @@ data Options = InitOptions { gpgID :: String
                                , passName :: PassName
                                , passLengh :: Integer }
              | RmOptions { recursive :: Bool
-                         , force :: Bool 
+                         , force :: Bool
                          , passName :: PassName}
-
 
 clipParser = switch (long "clip" <> short 'c')
 forceParser = switch (long "force" <> short 'f')
 passNameParser = argument str (metavar "PASSNAME")
 
+-- TODO: move into Options type
 initParser = InitOptions
              <$> argument str (metavar "GPG-ID")
              <*> switch ( long "reencrypt" <> short 'e' )
 
-lsParser = LsOptions 
+lsParser = LsOptions
            <$> strOption (long "subdir"
                           <> metavar "SUBDIR"
                           <> value "" )
@@ -47,44 +55,40 @@ insertParser = InsertOptions
                <*> passNameParser
 
 editParser = EditOptions <$> passNameParser
-generateParser = GenerateOptions 
+generateParser = GenerateOptions
                  <$> switch (long "no-symbols" <> short 'n')
                  <*> clipParser
                  <*> forceParser
                  <*> passNameParser
                  <*> argument auto (metavar "PASS-LENGTH")
 
-
-rmParser = RmOptions 
+rmParser = RmOptions
            <$> switch (long "recursive" <> short 'r')
            <*> forceParser
            <*> passNameParser
-           
-initStore (InitOptions _ _) = print "hello"
-lsStore (LsOptions _) = print "hello"
-showStore (ShowOptions _ _) = print "hello"
-insertStore (InsertOptions _ _ _ _) = print "hello"
-editStore (EditOptions _) = print "hello"
-generate (GenerateOptions _ _ _ _ _) = print "hello"
-rm (RmOptions _ _ _) = print "hello"
 
-initDesc = progDesc "Initialize new password storage and use gpg-id for encryption"
-lsDesc = progDesc "List passwords"
-showDesc = progDesc "Show existing password and optionally put it on the clipboard."
-insertDesc = progDesc "Insert new password"
-editDesc = progDesc "Insert a new password or edit an existing password using $EDITOR"
-generateDesc = progDesc "Generate a new password of pass-length"
-rmDesc = progDesc "Remove existing password or directory"
+-- TODO: Ugh this is annoying...need to find a cleaner way dispatch this
+cmd :: Options -> IO ()
+cmd (InitOptions reEncrypt gpgID) = initStore reEncrypt gpgID
+cmd (LsOptions subFolder) = lsStore subFolder
+cmd (ShowOptions clip name) = showStore clip name
+cmd (InsertOptions echo multiLine force name) = insertEntry echo multiLine force name
+cmd (EditOptions name) = editEntry name
+cmd (GenerateOptions noSymbols clip force name length) = 
+    generateEntry noSymbols clip force name length
+cmd (RmOptions recursive force name) = rmEntry recursive force name
 
-superParser = subparser
-              (command "init" (initStore <$> info (helper <*> initParser) initDesc)
-               <> command "ls" (lsStore <$> info lsParser lsDesc)
-               <> command "show" (showStore <$> info showParser showDesc)
-               <> command "insert" (insertStore <$> info insertParser insertDesc)
-               <> command "edit" (editStore <$> info editParser editDesc)
-               <> command "generate" (generate <$> info generateParser generateDesc)
-               <> command "rm" (rm <$> info rmParser rmDesc))
+subCommands = [("init", initParser, initDesc)
+              ,("ls", lsParser, lsDesc)
+              ,("show", showParser, showDesc)
+              ,("insert", initParser, insertDesc)
+              ,("edit", editParser, editDesc)
+              ,("generate", generateParser, generateDesc)
+              ,("rm", rmParser, rmDesc)]
 
+superParser = subparser $ foldr (<>) idm (map command' subCommands)
+    where command' (name, parser, desc) = command name (cmd <$> info (helper <*> parser) desc)
+                                
 main :: IO ()
 main = join $ execParser opts
     where opts = info (helper <*> superParser) idm
