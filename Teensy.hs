@@ -12,7 +12,7 @@ module Teensy
 
 type PassName = String
 
-gpg_opts = ["--quiet", "--yes", "--batch"]
+gpgOpts = ["--quiet", "--yes", "--batch"]
 
 clip = undefined
 

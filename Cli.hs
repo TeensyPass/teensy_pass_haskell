@@ -86,7 +86,7 @@ subCommands = [("init", initParser, initDesc)
               ,("generate", generateParser, generateDesc)
               ,("rm", rmParser, rmDesc)]
 
-superParser = subparser $ foldr (<>) idm (map command' subCommands)
+superParser = subparser $ foldr ((<>) . command') idm subCommands
     where command' (name, parser, desc) = command name (cmd <$> info (helper <*> parser) desc)
                                 
 main :: IO ()
